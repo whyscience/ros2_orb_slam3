@@ -1,3 +1,5 @@
 README.md
 *.mp4
 .vscode/
+/.idea/
+/cmake-build-debug/
