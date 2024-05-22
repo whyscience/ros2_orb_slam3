@@ -29,7 +29,7 @@
 #include <std_msgs/msg/string.hpp>
 #include <std_msgs/msg/bool.hpp>
 #include "sensor_msgs/msg/image.hpp"
-using std::placeholders::_1; //* TODO why this is suggested in official tutorial
+using std::placeholders::_1;
 
 // Include Eigen
 // Quick reference: https://eigen.tuxfamily.org/dox/group__QuickRefPage.html
@@ -58,29 +58,29 @@ class MonocularMode : public rclcpp::Node {
     //* This slam node inherits from both rclcpp and ORB_SLAM3::System classes
     //* public keyword needs to come before the class constructor and anything else
 public:
-    std::string experimentConfig = ""; // String to receive settings sent by the python driver
+    std::string experimentConfig; // String to receive settings sent by the python driver
     double timeStep; // Timestep data received from the python node
-    std::string receivedConfig = "";
+    std::string receivedConfig;
 
     //* Class constructor
     MonocularMode(); // Constructor
 
-    ~MonocularMode(); // Destructor
+    ~MonocularMode() override; // Destructor
 
 private:
     // Class internal variables
-    std::string homeDir = "";
+    std::string homeDir;
     std::string packagePath = "ros2_test/src/ros2_orb_slam3/"; //! Change to match path to your workspace
-    std::string OPENCV_WINDOW = ""; // Set during initialization
-    std::string nodeName = ""; // Name of this node
-    std::string vocFilePath = ""; // Path to ORB vocabulary provided by DBoW2 package
-    std::string settingsFilePath = ""; // Path to settings file provided by ORB_SLAM3 package
+    std::string OPENCV_WINDOW; // Set during initialization
+    std::string nodeName; // Name of this node
+    std::string vocFilePath; // Path to ORB vocabulary provided by DBoW2 package
+    std::string settingsFilePath; // Path to settings file provided by ORB_SLAM3 package
     bool bSettingsFromPython = false; // Flag set once when experiment setting from python node is received
 
-    std::string subexperimentconfigName = ""; // Subscription topic name
-    std::string pubconfigackName = ""; // Publisher topic name
-    std::string subImgMsgName = ""; // Topic to subscribe to receive RGB images from a python node
-    std::string subTimestepMsgName = ""; // Topic to subscribe to receive the timestep related to the
+    std::string subExperimentConfigName; // Subscription topic name
+    std::string pubConfigAckName; // Publisher topic name
+    std::string subImgMsgName; // Topic to subscribe to receive RGB images from a python node
+    std::string subTimestepMsgName; // Topic to subscribe to receive the timestep related to the
 
     //* Definitions of publisher and subscribers
     rclcpp::Subscription<std_msgs::msg::String>::SharedPtr expConfig_subscription_;

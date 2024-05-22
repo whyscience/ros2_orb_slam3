@@ -132,7 +132,7 @@ add_library(orb_slam3_lib SHARED
         orb_slam3/include/Settings.h
 )
 
-set_target_properties(orb_slam3_lib PROPERTIES VERSION "${orb_slam3_lib_VERSION}") # TODO need to findout why this is required
+set_target_properties(orb_slam3_lib PROPERTIES VERSION "${orb_slam3_lib_VERSION}") # TODO need to find out why this is required
 
 ament_target_dependencies(orb_slam3_lib
         ${THIS_PACKAGE_INCLUDE_DEPENDS}

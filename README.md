@@ -26,9 +26,9 @@ by the excellent ROS1 port of ORB SLAM3 by [thien94](https://github.com/thien94/
 1. Intel i5-9300H, x86_64 bit architecture , Ubuntu 22.04 LTS (Jammy Jellyfish) and RO2 Humble Hawksbill (LTS)
 2. AMD Ryzen 5600X, x86_64 bit architecture, Ubuntu 22.04 LTS (Jammy Jellyfish) and RO2 Humble Hawksbill (LTS)
 
-## 1. Prerequisitis
+## 1. Prerequisites
 
-The following softwares must be installed before this package can be installed and used correctly
+The following software must be installed before this package can be installed and used correctly
 
 ### Eigen3
 

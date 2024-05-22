@@ -35,17 +35,10 @@ MonocularMode::MonocularMode() : Node("mono_node_cpp") {
     settingsFilePath = "file_not_set";
 
     //* Populate parameter values
-    rclcpp::Parameter param1 = this->get_parameter("node_name_arg");
-    nodeName = param1.as_string();
-
-    rclcpp::Parameter param2 = this->get_parameter("voc_file_arg");
-    vocFilePath = param2.as_string();
-
-    rclcpp::Parameter param3 = this->get_parameter("settings_file_path_arg");
-    settingsFilePath = param3.as_string();
-
+    this->get_parameter("node_name_arg", nodeName);
+    this->get_parameter("voc_file_arg", vocFilePath);
+    this->get_parameter("settings_file_path_arg", settingsFilePath);
     // rclcpp::Parameter param4 = this->get_parameter("settings_file_name_arg");
-
 
     //* HARDCODED, set paths
     if (vocFilePath == "file_not_set" || settingsFilePath == "file_not_set") {
@@ -57,24 +50,23 @@ MonocularMode::MonocularMode() : Node("mono_node_cpp") {
     // std::cout<<"vocFilePath: "<<vocFilePath<<std::endl;
     // std::cout<<"settingsFilePath: "<<settingsFilePath<<std::endl;
 
-
     //* DEBUG print
     RCLCPP_INFO(this->get_logger(), "nodeName %s", nodeName.c_str());
     RCLCPP_INFO(this->get_logger(), "voc_file %s", vocFilePath.c_str());
-    // RCLCPP_INFO(this->get_logger(), "settings_file_path %s", settingsFilePath.c_str());
+    RCLCPP_INFO(this->get_logger(), "settings_file_path %s", settingsFilePath.c_str());
 
-    subexperimentconfigName = "/mono_py_driver/experiment_settings";
+    subExperimentConfigName = "/mono_py_driver/experiment_settings";
     // topic that sends out some configuration parameters to the cpp ndoe
-    pubconfigackName = "/mono_py_driver/exp_settings_ack"; // send an acknowledgement to the python node
+    pubConfigAckName = "/mono_py_driver/exp_settings_ack"; // send an acknowledgement to the python node
     subImgMsgName = "/mono_py_driver/img_msg"; // topic to receive RGB image messages
     subTimestepMsgName = "/mono_py_driver/timestep_msg"; // topic to receive RGB image messages
 
     //* subscribe to python node to receive settings
     expConfig_subscription_ = this->create_subscription<std_msgs::msg::String>(
-        subexperimentconfigName, 1, std::bind(&MonocularMode::experimentSetting_callback, this, _1));
+        subExperimentConfigName, 1, std::bind(&MonocularMode::experimentSetting_callback, this, _1));
 
     //* publisher to send out acknowledgement
-    configAck_publisher_ = this->create_publisher<std_msgs::msg::String>(pubconfigackName, 10);
+    configAck_publisher_ = this->create_publisher<std_msgs::msg::String>(pubConfigAckName, 10);
 
     //* subscrbite to the image messages coming from the Python driver node
     subImgMsg_subscription_ = this->create_subscription<sensor_msgs::msg::Image>(
@@ -140,7 +132,7 @@ void MonocularMode::initializeVSLAM(std::string &configString) {
     enableOpenCVWindow = true; // Shows OpenCV window output
 
     pAgent = new ORB_SLAM3::System(vocFilePath, settingsFilePath, sensorType, enablePangolinWindow);
-    std::cout << "MonocularMode node initialized" << std::endl; // TODO needs a better message
+    RCLCPP_INFO(this->get_logger(), "MonocularMode node initialized");
 }
 
 //* Callback that processes timestep sent over ROS
