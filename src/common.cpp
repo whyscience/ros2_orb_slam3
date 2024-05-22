@@ -14,8 +14,7 @@ REQUIREMENTS
 #include "ros2_orb_slam3/common.hpp"
 
 //* Constructor
-MonocularMode::MonocularMode() :Node("mono_node_cpp")
-{
+MonocularMode::MonocularMode() : Node("mono_node_cpp") {
     // Declare parameters to be passsed from command line
     // https://roboticsbackend.com/rclcpp-params-tutorial-get-set-ros2-params-with-cpp/
 
@@ -49,8 +48,7 @@ MonocularMode::MonocularMode() :Node("mono_node_cpp")
 
 
     //* HARDCODED, set paths
-    if (vocFilePath == "file_not_set" || settingsFilePath == "file_not_set")
-    {
+    if (vocFilePath == "file_not_set" || settingsFilePath == "file_not_set") {
         pass;
         vocFilePath = homeDir + "/" + packagePath + "orb_slam3/Vocabulary/ORBvoc.txt.bin";
         settingsFilePath = homeDir + "/" + packagePath + "orb_slam3/config/Monocular/";
@@ -65,42 +63,42 @@ MonocularMode::MonocularMode() :Node("mono_node_cpp")
     RCLCPP_INFO(this->get_logger(), "voc_file %s", vocFilePath.c_str());
     // RCLCPP_INFO(this->get_logger(), "settings_file_path %s", settingsFilePath.c_str());
 
-    subexperimentconfigName = "/mono_py_driver/experiment_settings"; // topic that sends out some configuration parameters to the cpp ndoe
+    subexperimentconfigName = "/mono_py_driver/experiment_settings";
+    // topic that sends out some configuration parameters to the cpp ndoe
     pubconfigackName = "/mono_py_driver/exp_settings_ack"; // send an acknowledgement to the python node
     subImgMsgName = "/mono_py_driver/img_msg"; // topic to receive RGB image messages
     subTimestepMsgName = "/mono_py_driver/timestep_msg"; // topic to receive RGB image messages
 
     //* subscribe to python node to receive settings
-    expConfig_subscription_ = this->create_subscription<std_msgs::msg::String>(subexperimentconfigName, 1, std::bind(&MonocularMode::experimentSetting_callback, this, _1));
+    expConfig_subscription_ = this->create_subscription<std_msgs::msg::String>(
+        subexperimentconfigName, 1, std::bind(&MonocularMode::experimentSetting_callback, this, _1));
 
     //* publisher to send out acknowledgement
     configAck_publisher_ = this->create_publisher<std_msgs::msg::String>(pubconfigackName, 10);
 
     //* subscrbite to the image messages coming from the Python driver node
-    subImgMsg_subscription_= this->create_subscription<sensor_msgs::msg::Image>(subImgMsgName, 1, std::bind(&MonocularMode::Img_callback, this, _1));
+    subImgMsg_subscription_ = this->create_subscription<sensor_msgs::msg::Image>(
+        subImgMsgName, 1, std::bind(&MonocularMode::Img_callback, this, _1));
 
     //* subscribe to receive the timestep
-    subTimestepMsg_subscription_= this->create_subscription<std_msgs::msg::Float64>(subTimestepMsgName, 1, std::bind(&MonocularMode::Timestep_callback, this, _1));
+    subTimestepMsg_subscription_ = this->create_subscription<std_msgs::msg::Float64>(
+        subTimestepMsgName, 1, std::bind(&MonocularMode::Timestep_callback, this, _1));
 
 
     RCLCPP_INFO(this->get_logger(), "Waiting to finish handshake ......");
-
 }
 
 //* Destructor
-MonocularMode::~MonocularMode()
-{
+MonocularMode::~MonocularMode() {
     // Stop all threads
     // Call method to write the trajectory file
     // Release resources and cleanly shutdown
     pAgent->Shutdown();
     pass;
-
 }
 
 //* Callback which accepts experiment parameters from the Python node
-void MonocularMode::experimentSetting_callback(const std_msgs::msg::String& msg){
-
+void MonocularMode::experimentSetting_callback(const std_msgs::msg::String &msg) {
     // std::cout<<"experimentSetting_callback"<<std::endl;
     bSettingsFromPython = true;
     experimentConfig = msg.data.c_str();
@@ -112,20 +110,17 @@ void MonocularMode::experimentSetting_callback(const std_msgs::msg::String& msg)
     auto message = std_msgs::msg::String();
     message.data = "ACK";
 
-    std::cout<<"Sent response: "<<message.data.c_str()<<std::endl;
+    std::cout << "Sent response: " << message.data.c_str() << std::endl;
     configAck_publisher_->publish(message);
 
     //* Wait to complete VSLAM initialization
     initializeVSLAM(experimentConfig);
-
 }
 
 //* Method to bind an initialized VSLAM framework to this node
-void MonocularMode::initializeVSLAM(std::string& configString){
-
+void MonocularMode::initializeVSLAM(std::string &configString) {
     // Watchdog, if the paths to vocabular and settings files are still not set
-    if (vocFilePath == "file_not_set" || settingsFilePath == "file_not_set")
-    {
+    if (vocFilePath == "file_not_set" || settingsFilePath == "file_not_set") {
         RCLCPP_ERROR(get_logger(), "Please provide valid voc_file and settings_file paths");
         rclcpp::shutdown();
     }
@@ -133,7 +128,8 @@ void MonocularMode::initializeVSLAM(std::string& configString){
     //* Build .yaml`s file path
 
     settingsFilePath = settingsFilePath.append(configString);
-    settingsFilePath = settingsFilePath.append(".yaml"); // Example ros2_ws/src/orb_slam3_ros2/orb_slam3/config/Monocular/TUM2.yaml
+    settingsFilePath = settingsFilePath.append(".yaml");
+    // Example ros2_ws/src/orb_slam3_ros2/orb_slam3/config/Monocular/TUM2.yaml
 
     RCLCPP_INFO(this->get_logger(), "Path to settings file: %s", settingsFilePath.c_str());
 
@@ -148,20 +144,18 @@ void MonocularMode::initializeVSLAM(std::string& configString){
 }
 
 //* Callback that processes timestep sent over ROS
-void MonocularMode::Timestep_callback(const std_msgs::msg::Float64& time_msg){
+void MonocularMode::Timestep_callback(const std_msgs::msg::Float64 &time_msg) {
     // timeStep = 0; // Initialize
     timeStep = time_msg.data;
 }
 
 //* Callback to process image message and run SLAM node
-void MonocularMode::Img_callback(const sensor_msgs::msg::Image& msg)
-{
+void MonocularMode::Img_callback(const sensor_msgs::msg::Image &msg) {
     // Initialize
     cv_bridge::CvImagePtr cv_ptr; //* Does not create a copy, memory efficient
 
     //* Convert ROS image to openCV image
-    try
-    {
+    try {
         //cv::Mat im =  cv_bridge::toCvShare(msg.img, msg)->image;
         cv_ptr = cv_bridge::toCvCopy(msg); // Local scope
 
@@ -169,10 +163,8 @@ void MonocularMode::Img_callback(const sensor_msgs::msg::Image& msg)
         // Update GUI Window
         // cv::imshow("test_window", cv_ptr->image);
         // cv::waitKey(3);
-    }
-    catch (cv_bridge::Exception& e)
-    {
-        RCLCPP_ERROR(this->get_logger(),"Error reading image");
+    } catch (cv_bridge::Exception &e) {
+        RCLCPP_ERROR(this->get_logger(), "Error reading image");
         return;
     }
 
@@ -184,7 +176,4 @@ void MonocularMode::Img_callback(const sensor_msgs::msg::Image& msg)
 
     //* An example of what can be done after the pose w.r.t camera coordinate frame is computed by ORB SLAM3
     //Sophus::SE3f Twc = Tcw.inverse(); //* Pose with respect to global image coordinate, reserved for future use
-
 }
-
-
