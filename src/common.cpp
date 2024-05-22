@@ -20,64 +20,30 @@ MonocularMode::MonocularMode() : Node("mono_node_cpp") {
 
     //* Find path to home directory
     homeDir = getenv("HOME");
-    // std::cout<<"Home: "<<homeDir<<std::endl;
+    RCLCPP_INFO(this->get_logger(), "ORB-SLAM3-V1 NODE STARTED");
 
-    // std::cout<<"VLSAM NODE STARTED\n\n";
-    RCLCPP_INFO(this->get_logger(), "\nORB-SLAM3-V1 NODE STARTED");
-
-    this->declare_parameter("node_name_arg", "not_given"); // Name of this agent
-    this->declare_parameter("voc_file_arg", "file_not_set"); // Needs to be overriden with appropriate name
-    this->declare_parameter("settings_file_path_arg", "file_path_not_set"); // path to settings file
-
-    //* Watchdog, populate default values
-    nodeName = "not_set";
-    vocFilePath = "file_not_set";
-    settingsFilePath = "file_not_set";
+    this->declare_parameter("voc_file", homeDir + "/" + packagePath + "orb_slam3/Vocabulary/ORBvoc.txt.bin"); // Needs to be overriden with appropriate name
+    this->declare_parameter("settings_file_path", homeDir + "/" + packagePath + "orb_slam3/config/Monocular/"); // path to settings file
+    this->declare_parameter("settings_file_name", "EuRoC.yaml");
+    this->declare_parameter("image_topic", "/camera/color/image_raw");
 
     //* Populate parameter values
-    this->get_parameter("node_name_arg", nodeName);
-    this->get_parameter("voc_file_arg", vocFilePath);
-    this->get_parameter("settings_file_path_arg", settingsFilePath);
-    // rclcpp::Parameter param4 = this->get_parameter("settings_file_name_arg");
+    this->get_parameter("voc_file", vocFilePath);
+    this->get_parameter("settings_file_path", settingsFilePath);
+    this->get_parameter("settings_file_name", settingsFileName);
+    this->get_parameter("image_topic", imageTopic);
 
-    //* HARDCODED, set paths
-    if (vocFilePath == "file_not_set" || settingsFilePath == "file_not_set") {
-        pass;
-        vocFilePath = homeDir + "/" + packagePath + "orb_slam3/Vocabulary/ORBvoc.txt.bin";
-        settingsFilePath = homeDir + "/" + packagePath + "orb_slam3/config/Monocular/";
-    }
-
-    // std::cout<<"vocFilePath: "<<vocFilePath<<std::endl;
-    // std::cout<<"settingsFilePath: "<<settingsFilePath<<std::endl;
-
-    //* DEBUG print
-    RCLCPP_INFO(this->get_logger(), "nodeName %s", nodeName.c_str());
-    RCLCPP_INFO(this->get_logger(), "voc_file %s", vocFilePath.c_str());
-    RCLCPP_INFO(this->get_logger(), "settings_file_path %s", settingsFilePath.c_str());
-
-    subExperimentConfigName = "/mono_py_driver/experiment_settings";
-    // topic that sends out some configuration parameters to the cpp ndoe
-    pubConfigAckName = "/mono_py_driver/exp_settings_ack"; // send an acknowledgement to the python node
-    subImgMsgName = "/mono_py_driver/img_msg"; // topic to receive RGB image messages
-    subTimestepMsgName = "/mono_py_driver/timestep_msg"; // topic to receive RGB image messages
-
-    //* subscribe to python node to receive settings
-    expConfig_subscription_ = this->create_subscription<std_msgs::msg::String>(
-        subExperimentConfigName, 1, std::bind(&MonocularMode::experimentSetting_callback, this, _1));
-
-    //* publisher to send out acknowledgement
-    configAck_publisher_ = this->create_publisher<std_msgs::msg::String>(pubConfigAckName, 10);
+    //DEBUG print
+    RCLCPP_INFO(this->get_logger(), "voc_file: %s", vocFilePath.c_str());
+    RCLCPP_INFO(this->get_logger(), "settings_file_path: %s", settingsFilePath.c_str());
+    RCLCPP_INFO(this->get_logger(), "settings_file_name: %s", settingsFileName.c_str());
 
     //* subscrbite to the image messages coming from the Python driver node
-    subImgMsg_subscription_ = this->create_subscription<sensor_msgs::msg::Image>(
-        subImgMsgName, 1, std::bind(&MonocularMode::Img_callback, this, _1));
-
-    //* subscribe to receive the timestep
-    subTimestepMsg_subscription_ = this->create_subscription<std_msgs::msg::Float64>(
-        subTimestepMsgName, 1, std::bind(&MonocularMode::Timestep_callback, this, _1));
-
+    imageSub = this->create_subscription<sensor_msgs::msg::Image>(
+        imageTopic, 1, std::bind(&MonocularMode::ImageCallback, this, std::placeholders::_1));
 
     RCLCPP_INFO(this->get_logger(), "Waiting to finish handshake ......");
+    initializeVSLAM(settingsFileName);
 }
 
 //* Destructor
@@ -86,42 +52,11 @@ MonocularMode::~MonocularMode() {
     // Call method to write the trajectory file
     // Release resources and cleanly shutdown
     pAgent->Shutdown();
-    pass;
-}
-
-//* Callback which accepts experiment parameters from the Python node
-void MonocularMode::experimentSetting_callback(const std_msgs::msg::String &msg) {
-    // std::cout<<"experimentSetting_callback"<<std::endl;
-    bSettingsFromPython = true;
-    experimentConfig = msg.data.c_str();
-    // receivedConfig = experimentConfig; // Redundant
-
-    RCLCPP_INFO(this->get_logger(), "Configuration YAML file name: %s", this->receivedConfig.c_str());
-
-    //* Publish acknowledgement
-    auto message = std_msgs::msg::String();
-    message.data = "ACK";
-
-    std::cout << "Sent response: " << message.data.c_str() << std::endl;
-    configAck_publisher_->publish(message);
-
-    //* Wait to complete VSLAM initialization
-    initializeVSLAM(experimentConfig);
 }
 
 //* Method to bind an initialized VSLAM framework to this node
 void MonocularMode::initializeVSLAM(std::string &configString) {
-    // Watchdog, if the paths to vocabular and settings files are still not set
-    if (vocFilePath == "file_not_set" || settingsFilePath == "file_not_set") {
-        RCLCPP_ERROR(get_logger(), "Please provide valid voc_file and settings_file paths");
-        rclcpp::shutdown();
-    }
-
-    //* Build .yaml`s file path
-
     settingsFilePath = settingsFilePath.append(configString);
-    settingsFilePath = settingsFilePath.append(".yaml");
-    // Example ros2_ws/src/orb_slam3_ros2/orb_slam3/config/Monocular/TUM2.yaml
 
     RCLCPP_INFO(this->get_logger(), "Path to settings file: %s", settingsFilePath.c_str());
 
@@ -136,35 +71,35 @@ void MonocularMode::initializeVSLAM(std::string &configString) {
 }
 
 //* Callback that processes timestep sent over ROS
-void MonocularMode::Timestep_callback(const std_msgs::msg::Float64 &time_msg) {
-    // timeStep = 0; // Initialize
+/*void MonocularMode::Timestep_callback(const std_msgs::msg::Float64 &time_msg) {
     timeStep = time_msg.data;
+}*/
+
+double StampToSec(builtin_interfaces::msg::Time stamp)
+{
+    double seconds = stamp.sec + (stamp.nanosec * pow(10,-9));
+    return seconds;
 }
 
 //* Callback to process image message and run SLAM node
-void MonocularMode::Img_callback(const sensor_msgs::msg::Image &msg) {
-    // Initialize
+void MonocularMode::ImageCallback(const sensor_msgs::msg::Image::SharedPtr msg) {
     cv_bridge::CvImagePtr cv_ptr; //* Does not create a copy, memory efficient
 
     //* Convert ROS image to openCV image
     try {
-        //cv::Mat im =  cv_bridge::toCvShare(msg.img, msg)->image;
         cv_ptr = cv_bridge::toCvCopy(msg); // Local scope
 
         // DEBUGGING, Show image
-        // Update GUI Window
         // cv::imshow("test_window", cv_ptr->image);
         // cv::waitKey(3);
     } catch (cv_bridge::Exception &e) {
         RCLCPP_ERROR(this->get_logger(), "Error reading image");
         return;
     }
-
-    // std::cout<<std::fixed<<"Timestep: "<<timeStep<<std::endl; // Debug
-
+    
     //* Perform all ORB-SLAM3 operations in Monocular mode
     //! Pose with respect to the camera coordinate frame not the world coordinate frame
-    Sophus::SE3f Tcw = pAgent->TrackMonocular(cv_ptr->image, timeStep);
+    Sophus::SE3f Tcw = pAgent->TrackMonocular(cv_ptr->image, StampToSec(msg->header.stamp));//todo set step
 
     //* An example of what can be done after the pose w.r.t camera coordinate frame is computed by ORB SLAM3
     //Sophus::SE3f Twc = Tcw.inverse(); //* Pose with respect to global image coordinate, reserved for future use

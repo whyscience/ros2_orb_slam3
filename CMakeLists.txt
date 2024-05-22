@@ -6,7 +6,7 @@ set(ENV{PYTHONPATH} "/opt/ros/humble/lib/python3.10/site-packages/") # Must be s
 
 # Must use C++17 to make it compatible with rclcpp
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -O3")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -O3 -Wno-reorder -Wno-deprecated-declarations")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -O3 -Wno-reorder -Wno-deprecated-declarations -Wno-unused-variable")
 
 # Check C++17 support
 include(CheckCXXCompilerFlag)
