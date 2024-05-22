@@ -1,12 +1,12 @@
 cmake_minimum_required(VERSION 3.8)
 project(ros2_orb_slam3)
 
-# Make sure to set this path before building the  
+# Make sure to set this path before building the
 set(ENV{PYTHONPATH} "/opt/ros/humble/lib/python3.10/site-packages/") # Must be set to match your installation
 
 # Must use C++17 to make it compatible with rclcpp
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -O3")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -O3")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -O3 -Wno-reorder -Wno-deprecated-declarations")
 
 # Check C++17 support
 include(CheckCXXCompilerFlag)
@@ -148,7 +148,7 @@ target_link_libraries(orb_slam3_lib
   ${PROJECT_SOURCE_DIR}/orb_slam3/Thirdparty/g2o/lib/libg2o.so
   -lboost_system
   -lboost_serialization
-  -lcrypto 
+  -lcrypto
 )
 
 
@@ -175,7 +175,7 @@ target_link_libraries(mono_node_cpp PUBLIC orb_slam3_lib) # Link a node with the
 
 
 # Install all the header files in package/package/include
-install (DIRECTORY include/ 
+install (DIRECTORY include/
         DESTINATION include
 )
 

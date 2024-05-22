@@ -61,7 +61,7 @@ class MonoDriver(Node):
         self.declare_parameter("image_seq","NULL")
 
         #* Parse values sent by command line
-        self.settings_name = str(self.get_parameter('settings_name').value) 
+        self.settings_name = str(self.get_parameter('settings_name').value)
         self.image_seq = str(self.get_parameter('image_seq').value)
 
         # DEBUG
@@ -87,18 +87,18 @@ class MonoDriver(Node):
         self.br = CvBridge()
 
         # Read images from the chosen dataset, order them in ascending order and prepare timestep data as well
-        self.imgz_seqz_dir, self.imgz_seqz, self.time_seqz = self.get_image_dataset_asl(self.image_sequence_dir, "mav0") 
+        self.imgz_seqz_dir, self.imgz_seqz, self.time_seqz = self.get_image_dataset_asl(self.image_sequence_dir, "mav0")
 
         print(self.image_seq_dir)
         print(len(self.imgz_seqz))
 
         #* ROS2 publisher/subscriber variables [HARDCODED]
-        self.pub_exp_config_name = "/mono_py_driver/experiment_settings" 
+        self.pub_exp_config_name = "/mono_py_driver/experiment_settings"
         self.sub_exp_ack_name = "/mono_py_driver/exp_settings_ack"
         self.pub_img_to_agent_name = "/mono_py_driver/img_msg"
         self.pub_timestep_to_agent_name = "/mono_py_driver/timestep_msg"
         self.send_config = True # Set False once handshake is completed with the cpp node
-        
+
         #* Setup ROS2 publishers and subscribers
         self.publish_exp_config_ = self.create_publisher(String, self.pub_exp_config_name, 1) # Publish configs to the ORB-SLAM3 C++ node
 
@@ -109,14 +109,14 @@ class MonoDriver(Node):
 
 
         #* Subscriber to get acknowledgement from CPP node that it received experimetn settings
-        self.subscribe_exp_ack_ = self.create_subscription(String, 
-                                                           self.sub_exp_ack_name, 
+        self.subscribe_exp_ack_ = self.create_subscription(String,
+                                                           self.sub_exp_ack_name,
                                                            self.ack_callback ,10)
         self.subscribe_exp_ack_
 
         # Publisher to send RGB image
         self.publish_img_msg_ = self.create_publisher(Image, self.pub_img_to_agent_name, 1)
-        
+
         self.publish_timestep_msg_ = self.create_publisher(Float64, self.pub_timestep_to_agent_name, 1)
 
 
@@ -138,7 +138,7 @@ class MonoDriver(Node):
         """
             Returns images and list of timesteps in ascending order from a ASL formatted dataset
         """
-        
+
         # Define work variables
         imgz_file_list = []
         time_list = []
@@ -164,12 +164,12 @@ class MonoDriver(Node):
             Callback function
         """
         print(f"Got ack: {msg.data}")
-        
+
         if(msg.data == "ACK"):
             self.send_config = False
-            # self.subscribe_exp_ack_.destory() # TODO doesn't work 
+            # self.subscribe_exp_ack_.destory() # TODO doesn't work
     # ****************************************************************************************
-    
+
     # ****************************************************************************************
     def handshake_with_cpp_node(self):
         """
@@ -182,7 +182,7 @@ class MonoDriver(Node):
             self.publish_exp_config_.publish(msg)
             time.sleep(0.01)
     # ****************************************************************************************
-    
+
     # ****************************************************************************************
     def run_py_node(self, idx, imgz_name):
         """
@@ -195,7 +195,7 @@ class MonoDriver(Node):
         # Path to this image
         img_look_up_path = self.imgz_seqz_dir  + imgz_name
         timestep = float(imgz_name.split(".")[0]) # Kept if you use a custom message interface to also pass timestep value
-        self.frame_id = self.frame_id + 1  
+        self.frame_id = self.frame_id + 1
         #print(img_look_up_path)
         # print(f"Frame ID: {frame_id}")
 
@@ -206,19 +206,19 @@ class MonoDriver(Node):
 
         # Publish RGB image and timestep, must be in the order shown below. I know not very optimum, you can use a custom message interface to send both
         try:
-            self.publish_timestep_msg_.publish(timestep_msg) 
+            self.publish_timestep_msg_.publish(timestep_msg)
             self.publish_img_msg_.publish(img_msg)
         except CvBridgeError as e:
             print(e)
     # ****************************************************************************************
-        
+
 
 # main function
 def main(args = None):
     rclpy.init(args=args) # Initialize node
     n = MonoDriver("mono_py_node") #* Initialize the node
     rate = n.create_rate(20) # https://answers.ros.org/question/358343/rate-and-sleep-function-in-rclpy-library-for-ros2/
-    
+
     #* Blocking loop to initialize handshake
     while(n.send_config == True):
         n.handshake_with_cpp_node()
@@ -227,7 +227,7 @@ def main(args = None):
 
         if(n.send_config == False):
             break
-        
+
     print(f"Handshake complete")
 
     #* Blocking loop to send RGB image and timestep message
@@ -241,7 +241,7 @@ def main(args = None):
             if (n.frame_id>n.frame_stop and n.frame_stop != -1):
                 print(f"BREAK!")
                 break
-        
+
         except KeyboardInterrupt:
             break
 
