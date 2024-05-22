@@ -208,5 +208,20 @@ install(PROGRAMS
         DESTINATION lib/${PROJECT_NAME}
 )
 
+install(DIRECTORY
+        launch
+        DESTINATION share/${PROJECT_NAME}
+)
+
+install(DIRECTORY
+        orb_slam3/Vocabulary/
+        DESTINATION share/${PROJECT_NAME}/orb_slam3/Vocabulary/
+)
+
+install(DIRECTORY
+        orb_slam3/config/
+        DESTINATION share/${PROJECT_NAME}/orb_slam3/config/
+)
+
 
 ament_package()

@@ -23,7 +23,7 @@ class MonocularMode : public rclcpp::Node {
     //* public keyword needs to come before the class constructor and anything else
 public:
     std::string experimentConfig; // String to receive settings sent by the python driver
-    double timeStep; // Timestep data received from the python node
+    double timeStep{}; // Timestep data received from the python node
     std::string receivedConfig;
 
     //* Class constructor
@@ -49,7 +49,7 @@ private:
     rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr imageSub;
 
     //* ORB_SLAM3 related variables
-    ORB_SLAM3::System *pAgent; // pointer to a ORB SLAM3 object
+    ORB_SLAM3::System *pAgent{}; // pointer to a ORB SLAM3 object
     ORB_SLAM3::System::eSensor sensorType;
     bool enablePangolinWindow = false; // Shows Pangolin window output
     bool enableOpenCVWindow = false; // Shows OpenCV window output

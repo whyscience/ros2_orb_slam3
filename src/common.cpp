@@ -56,7 +56,7 @@ MonocularMode::~MonocularMode() {
 
 //* Method to bind an initialized VSLAM framework to this node
 void MonocularMode::initializeVSLAM(std::string &configString) {
-    settingsFilePath = settingsFilePath.append(configString);
+    settingsFilePath = settingsFilePath + "/" + configString;
 
     RCLCPP_INFO(this->get_logger(), "Path to settings file: %s", settingsFilePath.c_str());
 
