@@ -3,3 +3,5 @@ README.md
 .vscode/
 /.idea/
 /cmake-build-debug/
+/orb_slam3/Thirdparty/g2o/build/
+/orb_slam3/Thirdparty/DBoW2/build/

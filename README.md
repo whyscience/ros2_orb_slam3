@@ -44,35 +44,36 @@ here https://robotics.stackexchange.com/questions/105973/ros2-port-of-orb-slam3-
 
 #### Install Pangolin
 
-```
+```bash
 cd ~/Documents
 git clone https://github.com/stevenlovegrove/Pangolin
 cd Pangolin
-./scripts/install_prerequisites.sh --dry-run recommended [Check what recommended softwares needs to be installed]
-./scripts/install_prerequisites.sh recommended [Install recommended dependencies]
-cmake -B build
-cmake --build build -j4
-sudo cmake --install build
+# [Check what recommended softwares needs to be installed]
+./scripts/install_prerequisites.sh --dry-run recommended 
+# [Install recommended dependencies]
+./scripts/install_prerequisites.sh recommended 
+mkdir -p build && cd build && cmake .. && make -j8
+sudo make install
 ```
 
 #### Configure dynamic library
 
 Check if ```/usr/lib/local``` is in the LIBRARY PATH
 
-```
+```bash
 echo $LD_LIBRARY_PATH
 ```
 
 If not, then perform the following
 
-```
+```bash
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib/local
 sudo ldconfig
 ```
 
 Then open the ```.bashrc``` file in ```\home``` directory and add these lines at the very end
 
-```
+```bash
 if [[ ":$LD_LIBRARY_PATH:" != *":/usr/local/lib:"* ]]; then
     export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
 fi
@@ -80,7 +81,7 @@ fi
 
 Finally, source ```.bashrc``` file
 
-```
+```bash
 source ~/.bashrc
 ```
 
@@ -89,7 +90,7 @@ source ~/.bashrc
 Ubuntu 22.04 by default comes with >OpenCV 4.2. Check to make sure you have at least 4.2 installed. Run the following in
 a terminal
 
-```
+```bash
 python3 -c "import cv2; print(cv2.__version__)"
 ```
 
@@ -97,13 +98,13 @@ python3 -c "import cv2; print(cv2.__version__)"
 
 1. In a new terminal move to home directory
 
-```
+```bash
 cd ~
 ```
 
 2. Create the ```ros2_test``` workspace, and download this package as shown below.
 
-```
+```bash
 mkdir -p ~/ros2_test/src
 cd ~/ros2_test/src
 git clone https://github.com/Mechazo11/ros2_orb_slam3.git
@@ -115,7 +116,7 @@ cd .. [make sure you are in ~/ros2_ws root directory]
 
 4. Source ROS2 Humble tools and run colcon build commands
 
-```
+```bash
 source /opt/ros/humble/setup.bash
 colcon build --symlink-install
 ```
@@ -125,7 +126,7 @@ colcon build --symlink-install
 Run the builtin example to verify the package is working correctly
 In one terminal [cpp node]
 
-```
+```bash
 cd ~/ros2_ws
 source install/setup.bash
 ros2 run ros2_orb_slam3 mono_node_cpp --ros-args -p node_name_arg:=mono_slam_cpp
@@ -133,8 +134,8 @@ ros2 run ros2_orb_slam3 mono_node_cpp --ros-args -p node_name_arg:=mono_slam_cpp
 
 In another terminal [python node]
 
-```
-cd ~\ros2_ws
+```bash
+cd ~/ros2_ws
 source install/setup.bash
 ros2 run ros2_orb_slam3 mono_driver_node.py --ros-args -p settings_name:=EuRoC -p image_seq:=sample_euroc_MH05
 ```
