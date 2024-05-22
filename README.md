@@ -126,7 +126,7 @@ Run the builtin example to verify the package is working correctly
 In one terminal [cpp node]
 
 ```
-cd ~\ros2_ws
+cd ~/ros2_ws
 source install/setup.bash
 ros2 run ros2_orb_slam3 mono_node_cpp --ros-args -p node_name_arg:=mono_slam_cpp
 ```

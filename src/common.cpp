@@ -70,11 +70,6 @@ void MonocularMode::initializeVSLAM(std::string &configString) {
     RCLCPP_INFO(this->get_logger(), "MonocularMode node initialized");
 }
 
-//* Callback that processes timestep sent over ROS
-/*void MonocularMode::Timestep_callback(const std_msgs::msg::Float64 &time_msg) {
-    timeStep = time_msg.data;
-}*/
-
 double StampToSec(builtin_interfaces::msg::Time stamp)
 {
     double seconds = stamp.sec + (stamp.nanosec * pow(10,-9));
